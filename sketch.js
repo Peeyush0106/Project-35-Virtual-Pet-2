@@ -1,35 +1,36 @@
 // Global Variables in our game
-var dog_norm, dog_hap, dog, database, food_stock, playerCount, playerCount_data, gameState, gameText, resetDogMoodTimer, counter, pet_hungry_text, pet_satis_text, max_pet_satis_time, inputNam, butto, greeting, txt1, txt2 /*, txt3*/, txt4, txt5, txt6, txt7, feed_button, buy_button, start_text, money, temp_food_stock;
+var dog_norm, dog_hap, dog, database, food_stock, gameState, gameText, resetDogMoodTimer, counter, pet_hungry_text, pet_satis_text, max_pet_satis_time, inputNam, butto, greeting, txt1, txt2 /*, txt3*/, txt4, txt5, txt6, txt7, feed_button, buy_button, start_text, money, temp_food_stock;
+
+var money_initialized = false;
+var food_initialized = false;
+
 
 function setup() {
     var canvas = createCanvas(700, 500);
     canvas.position(-350, -50);
     food_stock = 20;
-    playerCount = 0;
     money = 30;
     database = firebase.database();
-    playerCount_data = database.ref("PlayerDat/Count").on("value", function (data) {
-        playerCount = data.val();
-    });
     // "15 * 30" means 15 seconds. 30 is the universal framerate
     max_pet_satis_time = 15 * 30;
     gameState = "solving-form";
     gameText = pet_hungry_text;
     counter = max_pet_satis_time;
     inputName = createInput("Your pet").attribute("place-holder", "Name").size(80).attribute("maxlength", 10).position(250, 15).style("background-color", "yellow");
-    feed_button = createButton("Feed Milk").hide().position(340, 397.5).style("color", "blue").style("background-color", "yellow").mousePressed(function () {
+    feed_button = createButton("Feed Milk").hide().position(240, 397.5).style("color", "blue").style("background-color", "yellow").mousePressed(function () {
         if (food_stock > 0 && gameState === "hungry") {
             food_stock -= 1;
             gameState = "satis";
             gameText = pet_satis_text;
-            updateFoodStockCount(dog.name);
+            updateFoodStock(dog.name);
         }
     });
-    buy_button = createButton("Buy Food").hide().position(425, 397.5).style("color", "blue").style("background-color", "yellow").mousePressed(function () {
-        if (food_stock < 20 && money >= 6) {
+    buy_button = createButton("Buy Food").hide().position(325, 397.5).style("color", "blue").style("background-color", "yellow").mousePressed(function () {
+        if (food_stock < 19 && money >= 6) {
             money -= 6;
+            updateMoney(dog.name);
             food_stock += 2;
-            updateFoodStockCount(dog.name);
+            updateFoodStock(dog.name);
         }
     });
 
@@ -44,10 +45,11 @@ function setup() {
         gameState = "hungry";
         pet_hungry_text = [(petName + "'s hungry."), ("Press the button above to feed it")];
         pet_satis_text = "You've fed " + petName + "! Get it on a walk using your mouse";
-        dog = new Sprite(200, 200, 100, 100, "images/Dog.png", "images/happydog.png", 1, petName);
-        temp_food_stock = getFoodStockCount(petName);
-        // if(temp_food_stock == null) {
-        //     updateFoodStockCount(dog.name);
+        dog = new Sprite(320, 250, 100, 100, "images/Dog.png", "images/happydog.png", 1, petName);
+        getMoney(petName);
+        temp_food_stock = getFoodStock(petName);
+        // if(temp_food_stock === null) {
+        //     updateFoodStock(dog.name);
         // } else {
         //     food_stock = temp_food_stock;
         // }
@@ -58,15 +60,14 @@ function setup() {
     txt4 = createElement('h2').position(10, 440).style("color", "black").style("background-color", "orange");
     txt5 = createElement('h2').position(50, 60).style("color", "blue").html("Food Left: " + food_stock).hide();
     txt6 = createElement('h2').position(50, 95).style("color", "orange").html(petName + " will be hungry again in: " + resetDogMoodTimer + " seconds").hide();
-    txt7 = createElement('h3').position(360, 135).style("color", "orange").html("You have " + Math.round(money) + " $ as cash to buy food").hide();
-    txt8 = createElement('h3').position(360, 165).style("color", "orange").html("You are earning").hide();
-    dog = new Sprite(200, 200, 100, 100, "images/Dog.png", "images/happydog.png", 1, petName);
-    updatePlayerCount();
+    txt7 = createElement('h3').position(160, 135).style("color", "orange").html("You have " + Math.round(money) + " $ as cash to buy food").hide();
+    txt8 = createElement('h3').position(160, 165).style("color", "orange").html("You're earning. One bottle for 3 $").hide();
+    dog = new Sprite(320, 250, 100, 100, "images/Dog.png", "images/happydog.png", 1, petName);
 }
 
-function draw() {    
-    if (playerCount_data !== undefined) {
-        background(46, 139, 87);
+function draw() {
+    background(46, 139, 87);
+    if (food_initialized && money_initialized) {
         // 1 second.
         if (resetDogMoodTimer <= 1) {
             txt6.html(inputName.value() + " will be hungry again in: " + resetDogMoodTimer + " second").hide();
@@ -74,7 +75,14 @@ function draw() {
         else {
             txt6.html(inputName.value() + " will be hungry again in: " + resetDogMoodTimer + " seconds");
         }
-        money += 0.0057;
+        if (gameState !== "solving-form") {
+            money += 0.005;
+            console.log("Updating money locally");
+        }
+        if (Math.round(money % 1) === 0) {
+            updateMoney(dog.name);
+            console.log("Updating money in database");
+        }
         txt5.html("Food Left: " + food_stock);
         if (gameState !== "solving-form") {
             txt7.html("You have " + Math.round(money) + " $ as cash to buy food");
@@ -89,6 +97,8 @@ function draw() {
             line(600 + (dog.width / 2), 200 - (dog.height / 2), 600 + (dog.width / 2), 370 + (dog.height / 2));
             // Left
             line(100 - (dog.width / 2), 200 - (dog.height / 2), 100 - (dog.width / 2), 370 + (dog.height / 2));
+            // Midle
+            line(400 + (dog.width / 2), 200 - (dog.height / 2), 400 + (dog.width / 2), 370 + (dog.height / 2));
             // Up
             line(100 - (dog.width / 2), 200 - (dog.height / 2), 600 + (dog.width / 2), 200 - (dog.height / 2));
             // Down
@@ -126,9 +136,9 @@ function draw() {
                 dog.changePicture(dog.image2);
                 if (resetDogMoodTimer > 0) {
                     counter -= 1;
-                    if (mouseX < 600 && mouseX > 100 && mouseY < 370 && mouseY > 200) {
-                        dog.sprite.x = mouseX;
-                        dog.sprite.y = mouseY;
+                    if (mouseX < 400 && mouseX > 100 && mouseY < 370 && mouseY > 200) {
+                        dog.x = mouseX;
+                        dog.y = mouseY;
                     }
                 }
                 else {
@@ -136,8 +146,6 @@ function draw() {
                     counter = max_pet_satis_time;
                 }
             }
-            // updateFoodStockCount();
-            // updateName();
             if (resetDogMoodTimer <= 15 && gameState === "satis") {
                 push();
                 txt6.show();
@@ -157,55 +165,65 @@ function draw() {
         }
         dog.display();
     }
+    else if (gameState !== "solving-form") {
+        fill("red");
+        textSize(30);
+        text("We are Loading and Saving your's and " + dog.name + "'s details...", 10, 200, 490, 500);
+    }
 }
 
-function updatePlayerCount() {
-    playerCount += 1;
-    database.ref("PlayerDat").update({
-        Count: playerCount
+function getFoodStock(dogName) {
+    database.ref("Dogs/" + dogName + "/food").get().then(function (data) {
+        if (data.exists()) {
+            food_stock = data.val();
+        }
+        else {
+            updateFoodStock(dog.name);
+        }
+    }).catch(function (error) {
+        console.error(error);
     });
 }
 
-function updateFoodStockCount(dogName) {
-    database.ref("Dogs/"+dogName).update({
+function updateFoodStock(dogName) {
+    database.ref("Dogs/" + dogName).update({
         food: food_stock
     });
 }
 
-function getFoodStockCount(dogName) {
-
-    // stock_data = database.ref("Dogs/"+dogName+"/food");
-    // stock_data.on("value", function (data) {
-    //     temp_food_stock = data.val();
-    // });
-
-    database.ref("Dogs/"+dogName+"/food").get().then(function(snapshot) {
-        if (snapshot.exists()) {
-          food_stock = snapshot.val();
+function getFoodStock(dogName) {
+    database.ref("Dogs/" + dogName + "/food").get().then(function (data) {
+        if (data.exists()) {
+            food_stock = data.val();
         }
         else {
-          updateFoodStockCount(dog.name);          
+            updateFoodStock(dog.name);
         }
-      }).catch(function(error) {
+        food_initialized = true;
+    }).catch(function (error) {
         console.error(error);
-      });
-
-    //return database.ref("Dogs/"+dogName+"/food");
+    });
 }
 
-// function updateName() {
-//     var player = "player" + playerCount;
-//     var resource = database.ref("PlayerDat");
-//     // var id = player;
-//     resource.update({
-//         Name: player
-//     });
-// }
+function getMoney(dogName) {
+    database.ref("Dogs/" + dogName + "/Owner/cash").get().then(function (data) {
+        if (data.exists()) {
+            money = data.val();
+            console.log("Get Money", money);
+        }
+        else {
+            updateMoney(dog.name);
+            console.log("updating money through get money");
+        }
+        money_initialized = true;
+    }).catch(function (error) {
+        console.error(error);
+    });
+}
 
-function updateName() {
-    var playerIndex = "Player" + playerCount;
-    name_of_row = "Name" + playerCount
-    database.ref("PlayerDat").update({
-        name_of_row: playerIndex
+function updateMoney(dogName) {
+    var my_round_off_money = Math.round(money);
+    database.ref("Dogs/" + dogName + "/Owner").update({
+        cash: my_round_off_money
     });
 }

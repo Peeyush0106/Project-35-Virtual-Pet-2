@@ -18,10 +18,10 @@ class Sprite {
         this.image = picture;
     }
     display() {
-        this.x = this.sprite.x;
-        this.y = this.sprite.y;
         this.sprite.x = this.x;
         this.sprite.y = this.y;
+        this.x = this.sprite.x;
+        this.y = this.sprite.y;
         image(this.image, this.x, this.y, this.width, this.height);
     }
 }
