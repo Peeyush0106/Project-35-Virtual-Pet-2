@@ -1,7 +1,8 @@
 class Sprite {
-    constructor(x, y, width, height, picture1, picture2, choose_pic) {
+    constructor(x, y, width, height, picture1, picture2, choose_pic, name) {
         this.x = x;
         this.y = y;
+        this.name = name;
         this.width = width;
         this.height = height;
         this.sprite = createSprite(this.x, this.y, this.width, this.height);
