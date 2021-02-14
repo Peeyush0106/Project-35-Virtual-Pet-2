@@ -63,7 +63,7 @@ function setup() {
     txt7 = createElement('h3').position(160, 135).style("color", "orange").html("You have " + Math.round(money) + " $ as cash to buy food").hide();
     txt8 = createElement('h3').position(160, 155).style("color", "orange").html("You're earning. One bottle for 3 $").hide();
     txt9 = createElement('h4').position(90, 175).style("color", "orange").html("You can Buy food when your stock is less than 18").hide();
-    txt10 = createElement('h4').position(475, 133).style("color", "orange").html("Last Feed Time: " + fedTime).hide();
+    txt10 = createElement('h4').position(465, 133).style("color", "orange").html("Last Feed Time: " + fedTime).hide();
     dog = new Sprite(320, 260, 100, 100, "images/Dog.png", "images/happydog.png", 1, petName);
 }
 
