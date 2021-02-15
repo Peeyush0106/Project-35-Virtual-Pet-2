@@ -60,6 +60,9 @@ class Food {
             meridian = "AM";
             lastFed = [hourTime, minuteTime, meridian];
         }
+		if(hourTime === 0){
+			lastFed = [12, minuteTime, "AM"];
+		}
         txt10.html("Last Feed Time: " + fedTime);
         database.ref("Dogs/" + dogName).update({
             lastFeedTime: lastFed

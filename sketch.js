@@ -76,12 +76,6 @@ function draw() {
         food_stock = 20;
         foodObj.foodStock = food_stock;
     }
-    if (food_stock <= 19 || gameState === "solving-form") {
-        buy_button.hide();
-    }
-    if (food_stock < 19 && gameState !== "solving-form") {
-        buy_button.show();
-    }
     if (showImageNearDog) {
         push();
         angleMode(RADIANS);
@@ -96,6 +90,13 @@ function draw() {
     }
     if (food_initialized && money_initialized) {
         foodObj.display();
+		if (food_stock > 18 || money < 6 || gameState === "solving-form") {
+			console.log("Hiding Buy Button")
+			buy_button.hide();
+		}
+		else {
+			buy_button.show();
+		}
         // 1 second.
         if (resetDogMoodTimer <= 1) {
             txt6.html(inputName.value() + " will be hungry again in: " + resetDogMoodTimer + " second").hide();
@@ -219,6 +220,7 @@ function getMoney(dogName) {
         money_initialized = true;
     }).catch(function (error) {
         console.error(error);
+		location.reload();
     });
 }
 
