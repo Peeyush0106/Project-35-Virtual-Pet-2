@@ -1,0 +1,38 @@
+{
+  "Dogs": {
+    "          ": {
+      "Owner": {
+        "cash": 30
+      },
+      "food": 20
+    },
+    "Milo": {
+      "Owner": {
+        "cash": 30
+      },
+      "lastFeedTime": ""
+    },
+    "Tommy": {
+      "Owner": {
+        "cash": 45
+      },
+      "food": 18,
+      "lastFeedTime": [
+        1,
+        54,
+        "PM"
+      ]
+    },
+    "Your pet": {
+      "Owner": {
+        "cash": 41
+      },
+      "food": 10,
+      "lastFeedTime": [
+        4,
+        31,
+        "PM"
+      ]
+    }
+  }
+}

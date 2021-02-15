@@ -27,40 +27,23 @@ class Food {
             }
         }
     }
-    getFoodStock(dogName) {
-        database.ref("Dogs/" + dogName + "/food").get().then(function (data) {
-            if (data.exists()) {
-                food_stock = data.val();
-                newAccount = false;
-            }
-            else {
-                newAccount = true;
-                this.updateFoodStock(dog.name);
-            }
-            food_initialized = true;
-        }).catch(function (error) {
-            console.error(error);
-        });
-    }
     updateFoodStock(dogName) {
         database.ref("Dogs/" + dogName).update({
             food: food_stock
         });
     }
-    getLastFed(dogName) {
-        database.ref("Dogs/" + dogName + "/lastFeedTime").get().then(function (data) {
+    getFoodStock(dogName) {
+        var obj = this;
+        database.ref("Dogs/" + dogName + "/food").get().then(function (data) {
             if (data.exists()) {
-                console.log("Last Feed Data Exists");
-                lastFed = data.val();
-                fedTime = (lastFed[0]) + ": " + lastFed[1] + " " + lastFed[2];
-                txt10.html("Last Feed Time: " + fedTime);
+                food_stock = data.val();
+                // newAccount = false;
             }
             else {
-                console.log("Last Feed Data Does not Exist");
-                database.ref("Dogs/" + dogName).update({
-                    lastFeedTime: ""
-                });
+                // newAccount = true;
+                obj.updateFoodStock(dog.name);
             }
+            food_initialized = true;
         }).catch(function (error) {
             console.error(error);
         });
@@ -80,6 +63,24 @@ class Food {
         txt10.html("Last Feed Time: " + fedTime);
         database.ref("Dogs/" + dogName).update({
             lastFeedTime: lastFed
+        });
+    }
+    getLastFed(dogName) {
+        database.ref("Dogs/" + dogName + "/lastFeedTime").get().then(function (data) {
+            if (data.exists()) {
+                console.log("Last Feed Data Exists");
+                lastFed = data.val();
+                fedTime = (lastFed[0]) + ": " + lastFed[1] + " " + lastFed[2];
+                txt10.html("Last Feed Time: " + fedTime);
+            }
+            else {
+                console.log("Last Feed Data Does not Exist");
+                database.ref("Dogs/" + dogName).update({
+                    lastFeedTime: ""
+                });
+            }
+        }).catch(function (error) {
+            console.error(error);
         });
     }
 }
